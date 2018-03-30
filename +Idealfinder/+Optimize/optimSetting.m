@@ -2,9 +2,9 @@
 function optimSetting()
     global oVehicle oCourse oIdeal oHorizont
     
-    start_line = findobj('Tag','optim_preview:start');
+    start_line = findobj('Tag', 'optim_preview:start');
     start = start_line.UserData;
-    ziel_line = findobj('Tag','optim_preview:ziel');
+    ziel_line = findobj('Tag', 'optim_preview:ziel');
     ziel = ziel_line.UserData;
     quer_sl1 = findobj('Tag','quer_sl1');
     quer_sl2 = findobj('Tag','quer_sl2');
@@ -28,8 +28,6 @@ function optimSetting()
     if v_output.Value == 1
         sv = 'sv=true';
         aOptional{end+1} = 'SpeedVec';
-%     else
-%         sv = 'sv=false';
     end
 
     %% Optimierungshorizont
@@ -141,11 +139,9 @@ function optimSetting()
                                    , 'Diagnostics', 'on' ...
                                    );
     %% startet Optimierung
-    %profile on
-    tic
+    timerStart = tic;
     sOptimResults = Idealfinder.Optimize.runFmincon(sProblem);
-    toc
-    %profile viewer
+    toc(timerStart)
 
     oIdeal = oHorizont.getPathforOptimization(sOptimResults.x(:, 1));
     if true

@@ -248,13 +248,15 @@ classdef Dialog
             source.Tag = 'init';
             this.preview(source, oCourse);
         end
-        
-        function PrepareOptimization(this)
+    end
+    
+    methods (Static)
+        function PrepareOptimization()
             Idealfinder.Optimize.optimSetting();
             %close(this.hFigure);
         end
         
-        function preview(this, source, oCourse)
+        function preview(hSource, oCourse)
             update_startline = false;
             update_zielline = false;
             hMainAxes = findobj('Tag', 'Hauptachse');
@@ -264,15 +266,15 @@ classdef Dialog
             S.Vertices(1:n,:) = [oCourse.leftBorder , oCourse.XYZ(:, 3)];
             S.Vertices(n+1:2*n,:) = [oCourse.rightBorder , oCourse.XYZ(:, 3)];
 
-            switch source.Tag
+            switch hSource.Tag
                 case 'init'
                     update_startline = true;
                     update_zielline = true;
                 case 'start_sl'
                     update_startline = true;
                     ziel_sl = findobj('Tag', 'ziel_sl');
-                    if source.Value > ziel_sl.Value
-                        ziel_sl.Value = source.Value;
+                    if hSource.Value > ziel_sl.Value
+                        ziel_sl.Value = hSource.Value;
                         update_zielline = true;
                     end
                 case 'quer_sl1'
@@ -280,16 +282,16 @@ classdef Dialog
                 case 'quer_sl2'
                     update_startline = true;
                 case 'orient_sl'
-                    orient_sl = findobj('Tag', source.Tag);
+                    orient_sl = findobj('Tag', hSource.Tag);
                     orient_sl.TooltipString = sprintf('Orientierung: %d', orient_sl.Value);
                 case 'v_sl'
-                    v_sl = findobj('Tag',source.Tag);
+                    v_sl = findobj('Tag',hSource.Tag);
                     v_sl.TooltipString = sprintf('Geschwindigkeit: %d', v_sl.Value);
                 case 'ziel_sl'
                     update_zielline = true;
                     start_sl = findobj('Tag', 'start_sl');
-                    if source.Value < start_sl.Value
-                        start_sl.Value = source.Value;
+                    if hSource.Value < start_sl.Value
+                        start_sl.Value = hSource.Value;
                         update_startline = true;
                     end
             end
