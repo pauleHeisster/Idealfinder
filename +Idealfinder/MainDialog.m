@@ -38,20 +38,21 @@ classdef MainDialog < handle
             
             hContextMainMenu = uicontextmenu;
             hUiDel = uimenu(hContextMainMenu, 'Label', 'Obj&ekte loeschen');
-                uimenu(hUiDel, 'Label', '&1 alle Objekte', ...
-                    'Callback', @(~,~) this.DelAll);
-                uimenu(hUiDel, 'Label', '&2 aktuelles Objekt', ...
-                    'Callback', @(~,~) this.DelGCO);
-                uimenu(hUiDel, 'Label', '&3 Kruemmung', ...
-                    'Callback', @(~,~) delete(findobj(this.hMainAxes, 'Type', 'rectangle')), 'Separator', 'on');
-                uimenu(hUiDel, 'Label', '&4 Vektoren', ...
-                    'Callback', @(~,~) delete(findobj(this.hMainAxes, 'Tag', 'arrow')));
-                uimenu(hUiDel, 'Label', '&5 D-Mode', ...
-                    'Callback', @(~,~) delete(findobj(this.hMainAxes, 'Tag', 'dmode')));
-                uimenu(hUiDel, 'Label', '&6 Optimierung', ...
-                    'Callback', @(~,~) delete(findobj(this.hMainAxes, 'Tag', 'optim_item')));
-                uimenu(hContextMainMenu, 'Label', 'D-Mode', ...
-                    'Callback', @(src, ~) this.toogleDmode(src), 'Checked', 'off');
+                uimenu(hUiDel, 'Label', '&1 alle Objekte' ...
+                    , 'Callback', @(~,~) this.DeleteAll);
+                uimenu(hUiDel, 'Label', '&2 aktuelles Objekt' ...
+                    , 'Callback', @(~,~) this.DeleteGCO);
+                uimenu(hUiDel, 'Label', '&3 Kruemmung' ...
+                    , 'Callback', @(~,~) delete(findobj(this.hMainAxes, 'Type', 'rectangle')) ...
+                    , 'Separator', 'on');
+                uimenu(hUiDel, 'Label', '&4 Vektoren' ...
+                    , 'Callback', @(~,~) delete(findobj(this.hMainAxes, 'Tag', 'arrow')));
+                uimenu(hUiDel, 'Label', '&5 D-Mode' ...
+                    , 'Callback', @(~,~) delete(findobj(this.hMainAxes, 'Tag', 'dmode')));
+                uimenu(hUiDel, 'Label', '&6 Optimierung' ...
+                    , 'Callback', @(~,~) delete(findobj(this.hMainAxes, 'Tag', 'optim_item')));
+                uimenu(hContextMainMenu, 'Label', 'D-Mode' ...
+                    , 'Callback', @(src, ~) this.toggleDmode(src), 'Checked', 'off');
                 
             hUiMenuCourses = uimenu(hContextMainMenu, 'Label', '&1 Streckenimport', 'Separator', 'on');
                 uimenu(hUiMenuCourses, 'Label', 'Lade Kurve &1', 'Callback', @(src,~) Idealfinder.Lib.LoadTrack('Kurve1', this));
@@ -60,16 +61,16 @@ classdef MainDialog < handle
                 uimenu(hUiMenuCourses, 'Label', 'Lade &Aschheim', 'Callback', @(src,~) Idealfinder.Lib.LoadTrack('aschheim', this));
                 uimenu(hUiMenuCourses, 'Label', 'Lade Strecke aus &GPS-Datei', 'Callback', @(src,~) Idealfinder.Lib.LoadTrack('', this));
                 uimenu(hUiMenuCourses, 'Label', 'Kurvefolge &manuell eingeben', 'Callback', @(src,~) Idealfinder.Lib.LoadTrack('custom', this));
-                uimenu(hUiMenuCourses, 'Label', 'Moving-Average-Filter', 'Tag', 'filter_maf', 'Callback', @(src,~) this.toogleFilter(src), 'Separator', 'on', 'Checked', 'on');
-                uimenu(hUiMenuCourses, 'Label', 'DPS-Filter', 'Tag', 'filter_dps', 'Callback', @(src,~) this.toogleFilter(src));
+                uimenu(hUiMenuCourses, 'Label', 'Moving-Average-Filter', 'Tag', 'filter_maf', 'Callback', @(src,~) this.toggleFilter(src), 'Separator', 'on', 'Checked', 'on');
+                uimenu(hUiMenuCourses, 'Label', 'DPS-Filter', 'Tag', 'filter_dps', 'Callback', @(src,~) this.toggleFilter(src));
+                uimenu(hUiMenuCourses, 'Label', 'Simple-GPS-convert', 'Tag', 'convert_simple', 'Callback', @(src,~) this.toggleConvert(src), 'Separator', 'on');
+                uimenu(hUiMenuCourses, 'Label', 'Gauss-GPS-convert', 'Tag', 'convert_gauss', 'Callback', @(src,~) this.toggleConvert(src), 'Checked', 'on');
 
             this.sSettings.bDmode = false;
             this.sSettings.filter = 'maf'; % 'dps';
-            this.sSettings.calc = 'gauss'; % 'simple';
+            this.sSettings.convert = 'gauss'; % 'simple';
             if true
-                %wheeler_ui = ...
                 uimenu(hContextMainMenu, 'Label', '&Fahrzeugparameter', 'Callback', @(~,~) Carisma.Dialog(oVehicle));
-                %uimenu(wheeler_ui, 'Label', '&Motorkennfeld', 'Tag', 'wheeler_kf', 'Checked', 'off', 'Callback', 'toogle_wheeler');
             end
             
             hUiDevs = uimenu(hContextMainMenu, 'Label', '&2 Devs');
@@ -86,7 +87,11 @@ classdef MainDialog < handle
                     devnotes = strrep(comment{1}, '%', '');
                     [~, strName] = fileparts(sMFile.name);
                     strDevCmd = strrep(fullfile(sMFile.folder, strName), strRootDir, '');
-                    strPattern = sprintf('(%s+)|(%s)', repmat(filesep, 1, 3), repmat(filesep, 1, 2));
+                    strSeperator = filesep;
+                    if ispc
+                        strSeperator(2) = filesep;
+                    end
+                    strPattern = sprintf('(%s\\+)|(%s)', strSeperator, strSeperator);
                     strDevCmd = regexprep(strDevCmd, strPattern, '.');
                     strDevCmd = regexprep(strDevCmd, '^\.', '');
                     uimenu(hUiDevs, 'Label', sprintf('%s :%s', strName, devnotes{1}), 'Callback', strDevCmd);
@@ -97,8 +102,10 @@ classdef MainDialog < handle
             end
             this.hMainAxes.UIContextMenu = hContextMainMenu; 
         end
-        
-        function toogleDmode(this, hUIMenu)
+    end
+       
+    methods % Utilities
+        function toggleDmode(this, hUIMenu)
             switch hUIMenu.Checked
                 case 'on'
                     hUIMenu.Checked = 'off';
@@ -109,11 +116,11 @@ classdef MainDialog < handle
             end
         end
         
-        function toogleFilter(this, hUIFilterMenu)
+        function toggleFilter(this, hUIFilterMenu)
             hUIParentMenu = hUIFilterMenu.Parent;
             ahUIChildren = hUIParentMenu.Children;
-            ahUIFilter = ahUIChildren(~cellfun(@isempty, regexp({ahUIChildren.Tag}, 'filter_', 'once')));
-            for hUIFilter = ahUIFilter'
+            ahUIFilters = ahUIChildren(~cellfun(@isempty, regexp({ahUIChildren.Tag}, 'filter_', 'once')));
+            for hUIFilter = ahUIFilters'
                 if hUIFilterMenu == hUIFilter
                    hUIFilter.Checked = 'on';
                    astrFilterType = regexp(hUIFilter.Tag, 'filter_(.*)', 'tokens', 'once');
@@ -124,12 +131,27 @@ classdef MainDialog < handle
             end
         end
         
-        function DelAll(this)
+        function toggleConvert(this, hUIConvertMenu)
+            hUIParentMenu = hUIConvertMenu.Parent;
+            ahUIChildren = hUIParentMenu.Children;
+            ahUIConverts = ahUIChildren(~cellfun(@isempty, regexp({ahUIChildren.Tag}, 'convert_', 'once')));
+            for hUIConvert = ahUIConverts'
+                if hUIConvertMenu == hUIConvert
+                   hUIConvert.Checked = 'on';
+                   astrFilterType = regexp(hUIConvert.Tag, 'convert_(.*)', 'tokens', 'once');
+                   this.sSettings.convert = astrFilterType{1};
+                else
+                   hUIConvert.Checked = 'off';
+                end
+            end
+        end
+        
+        function DeleteAll(this)
             delete(this.hMainAxes.Children(1:end-3));
             this.hMainAxes.UserData = [];
         end
         
-        function DelGCO(this)
+        function DeleteGCO(this)
             oCurrentObject = gco;
             bDel = true;
             astrTagnames = {'Hauptachse', 'ML', 'Start', 'Ziel', 'LRand', 'RRand'};
@@ -138,7 +160,7 @@ classdef MainDialog < handle
                 hUndelObject = findobj(this.hMainAxes, 'Tag', strTagname);
                 if ~isempty(hUndelObject) && isequal(oCurrentObject, hUndelObject)
                     bDel = false;
-                    break;
+                    break
                 end
             end
             if bDel
@@ -148,6 +170,4 @@ classdef MainDialog < handle
             end
         end
     end
-    
 end
-
